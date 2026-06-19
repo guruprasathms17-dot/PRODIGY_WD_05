@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Weather Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="sky" id="sky"></div>
+
+  <main class="panel" id="panel">
+
+    <header class="nameplate">
+      <span class="brand">⟡ WEATHER STATION</span>
+
+      <form id="searchForm" class="search" role="search">
+        <input id="searchInput" type="text" placeholder="Enter a city" autocomplete="off" aria-label="Search for a city" />
+        <button type="submit" aria-label="Search">→</button>
+      </form>
+
+      <button id="locateBtn" class="locate" type="button" aria-label="Use my current location" title="Use my location">⌖</button>
+      <button id="unitToggle" class="unit" type="button" aria-label="Toggle temperature units">°F</button>
+    </header>
+
+    <div id="statusBar" class="status" role="status" hidden></div>
+
+    <section class="readout">
+      <div class="readout-main">
+        <p class="location" id="locationName">—</p>
+        <p class="temp" id="tempValue">--°</p>
+        <p class="condition" id="conditionText">Reading instruments…</p>
+        <p class="feels" id="feelsLike">—</p>
+      </div>
+
+      <div class="dial-wrap">
+        <div class="compass" id="compass" aria-hidden="true">
+          <span class="tick n">N</span>
+          <span class="tick e">E</span>
+          <span class="tick s">S</span>
+          <span class="tick w">W</span>
+          <div class="needle" id="needle"></div>
+          <div class="hub"></div>
+        </div>
+        <p class="dial-label">WIND <span id="windSpeed">--</span></p>
+      </div>
+    </section>
+
+    <section class="gauges" id="gauges">
+      <div class="gauge">
+        <span class="gauge-label">HUMIDITY</span>
+        <span class="gauge-value" id="humidity">--</span>
+      </div>
+      <div class="gauge">
+        <span class="gauge-label">PRESSURE</span>
+        <span class="gauge-value" id="pressure">--</span>
+      </div>
+      <div class="gauge">
+        <span class="gauge-label">UV INDEX</span>
+        <span class="gauge-value" id="uv">--</span>
+      </div>
+      <div class="gauge">
+        <span class="gauge-label">PRECIP</span>
+        <span class="gauge-value" id="precip">--</span>
+      </div>
+    </section>
+
+    <section class="hourly-wrap">
+      <p class="section-label">NEXT 12 HOURS</p>
+      <div class="hourly" id="hourly"></div>
+    </section>
+
+    <section class="daily-wrap">
+      <p class="section-label">6-DAY OUTLOOK</p>
+      <div class="daily" id="daily"></div>
+    </section>
+
+    <footer class="footer">Created By : Guruprasath MS</footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
