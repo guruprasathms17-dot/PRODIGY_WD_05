@@ -175,15 +175,15 @@ async function geocode(query) {
     panel.classList.add("is-loading");
 
     try {
-        // Step 1: Request up to 10 results to find the best match worldwide
-        let url = `${GEO_URL}?name=${encodeURIComponent(searchQuery)}&count=10&language=en&format=json`;
+        // Step 1: Request up to 20 options globally
+        let url = `${GEO_URL}?name=${encodeURIComponent(searchQuery)}&count=20&language=en&format=json`;
         let res = await fetch(url);
         let json = await res.json();
         
-        // Step 2: Fallback if a broad region name returned nothing
+        // Split multi-word fallback (e.g., "West Bengal" fallback)
         if (!json.results?.length && searchQuery.includes(" ")) {
             let primaryWord = searchQuery.split(" ")[0];
-            url = `${GEO_URL}?name=${encodeURIComponent(primaryWord)}&count=10&language=en&format=json`;
+            url = `${GEO_URL}?name=${encodeURIComponent(primaryWord)}&count=20&language=en&format=json`;
             res = await fetch(url);
             json = await res.json();
         }
@@ -192,28 +192,63 @@ async function geocode(query) {
             throw new Error(`No results for "${query}"`);
         }
 
-        // Step 3: Prioritization matching logic
-        let targetLocation = json.results[0];
         const lowerQuery = searchQuery.toLowerCase();
+        let targetLocation = null;
 
+        // Step 2: FIRST PASS - Explicit check for State (admin1) or Country match
         for (let loc of json.results) {
-            const locName = (loc.name || "").toLowerCase();
             const adminName = (loc.admin1 || "").toLowerCase();
-            
-            if (locName === lowerQuery || adminName === lowerQuery) {
+            const countryName = (loc.country || "").toLowerCase();
+            const cityName = (loc.name || "").toLowerCase();
+
+            if (adminName === lowerQuery || countryName === lowerQuery || cityName === lowerQuery) {
                 targetLocation = loc;
                 break;
             }
         }
+
+        // Step 3: SECOND PASS - Fuzzy/Partial match fallback (Handles typos like "maharastra")
+        if (!targetLocation) {
+            for (let loc of json.results) {
+                const adminName = (loc.admin1 || "").toLowerCase();
+                const countryName = (loc.country || "").toLowerCase();
+                const cityName = (loc.name || "").toLowerCase();
+
+                if (
+                    adminName.includes(lowerQuery) || 
+                    countryName.includes(lowerQuery) || 
+                    cityName.includes(lowerQuery) ||
+                    lowerQuery.includes(adminName)
+                ) {
+                    targetLocation = loc;
+                    break;
+                }
+            }
+        }
+
+        // Ultimate fallback to first result if loops find absolutely nothing
+        if (!targetLocation) targetLocation = json.results[0];
         
-        // Grab the data fields cleanly
-        const { latitude, longitude, name, country } = targetLocation;
+        // Step 4: Fix Display Name Output Text
+        let displayLocationName = targetLocation.name;
+        const targetAdminLower = (targetLocation.admin1 || "").toLowerCase();
+        const targetCountryLower = (targetLocation.country || "").toLowerCase();
+
+        // If the query was meant for a state or matches the state name, use the state name for display
+        if (lowerQuery.includes(targetAdminLower) || targetAdminLower.includes(lowerQuery)) {
+            displayLocationName = targetLocation.admin1;
+        } else if (lowerQuery.includes(targetCountryLower) || targetCountryLower.includes(lowerQuery)) {
+            displayLocationName = targetLocation.country;
+        }
+
+        const { latitude, longitude, country } = targetLocation;
         
-        /* 
-           THIS IS THE CHANGE: 
-           Pass `${name}, ${country}` together as the single display string!
-        */
-        await fetchWeather(latitude, longitude, `${name}, ${country}`);
+        // Final display verification string formatting
+        if (displayLocationName.toLowerCase() === country.toLowerCase()) {
+            await fetchWeather(latitude, longitude, `${displayLocationName}`);
+        } else {
+            await fetchWeather(latitude, longitude, `${displayLocationName}, ${country}`);
+        }
         
     } catch (e) {
         setStatus(`⚠️ ${e.message}`);
